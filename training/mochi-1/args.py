@@ -105,6 +105,11 @@ def _get_validation_args(parser: argparse.ArgumentParser) -> None:
         help="Run validation every X training steps. Validation consists of running the validation prompt `args.num_validation_videos` times.",
     )
     parser.add_argument(
+        "--validation_steps",
+        type=int,
+        default=200,
+    )
+    parser.add_argument(
         "--enable_slicing",
         action="store_true",
         default=False,
