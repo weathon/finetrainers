@@ -30,8 +30,8 @@ cmd="CUDA_VISIBLE_DEVICES=$GPU_IDS python text_to_video_lora.py \
   --checkpointing_steps 100 \
   --allow_tf32 \
   --report_to wandb \
-  --rank 8 \
-  --lora_alpha 8 \
+  --rank 32 \
+  --lora_alpha 32 \
   --push_to_hub"
 
 echo "Running command: $cmd"
