@@ -233,7 +233,7 @@ class CollateFunction:
         self.caption_dropout = caption_dropout
 
     def __call__(self, samples: List[Tuple[dict, torch.Tensor]]) -> Dict[str, torch.Tensor]:
-        ldists = torch.cat([data[0] for data in samples], dim=0)
+        ldists = torch.cat([data[0]["ldist"] for data in samples], dim=0)
         z = DiagonalGaussianDistribution(ldists).sample()
         assert torch.isfinite(z).all()
 
