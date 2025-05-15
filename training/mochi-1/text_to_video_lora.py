@@ -444,7 +444,57 @@ def main(args):
             progress_bar.set_postfix(**logs)
             if wandb_run:
                 wandb_run.log(logs, step=global_step)
-
+      
+            if args.validation_prompt is not None and global_step % args.validation_steps == 0:
+                print("===== Memory before validation =====")
+                print_memory("cuda")
+    
+                transformer.eval()
+                pipe = MochiPipeline.from_pretrained(
+                    args.pretrained_model_name_or_path,
+                    transformer=transformer,
+                    scheduler=scheduler,
+                    revision=args.revision,
+                    variant=args.variant,
+                )
+    
+                if args.enable_slicing:
+                    pipe.vae.enable_slicing()
+                if args.enable_tiling:
+                    pipe.vae.enable_tiling()
+                if args.enable_model_cpu_offload:
+                    pipe.enable_model_cpu_offload()
+    
+                validation_prompts = args.validation_prompt.split(args.validation_prompt_separator)
+                for validation_prompt in validation_prompts:
+                    pipeline_args = {
+                        "prompt": validation_prompt,
+                        "negative_prompt": "standing out, colour or texture contrast against the background, visible, clear, distinct, easy to see, easy to distinguish, easy to identify, easy to recognize, easy to spot, easy to notice, easy to find, easy to detect, big and center",
+                        "guidance_scale": 6.0,
+                        "num_inference_steps": 64,
+                        "height": args.height,
+                        "width": args.width,
+                        "max_sequence_length": 256,
+                    }
+                    log_validation(
+                        pipe=pipe,
+                        args=args,
+                        pipeline_args=pipeline_args,
+                        epoch=epoch,
+                        wandb_run=wandb_run,
+                    )
+    
+                print("===== Memory after validation =====")
+                print_memory("cuda")
+                reset_memory("cuda")
+    
+                del pipe.text_encoder
+                del pipe.vae
+                del pipe
+                gc.collect()
+                torch.cuda.empty_cache()
+    
+                transformer.train()
             if args.checkpointing_steps is not None and global_step % args.checkpointing_steps == 0:
                 print(f"Saving checkpoint at step {global_step}")
                 checkpoint_path = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
@@ -461,57 +511,7 @@ def main(args):
 
         if global_step >= args.max_train_steps:
             break
-
-        if args.validation_prompt is not None and global_step % args.validation_steps == 0:
-            print("===== Memory before validation =====")
-            print_memory("cuda")
-
-            transformer.eval()
-            pipe = MochiPipeline.from_pretrained(
-                args.pretrained_model_name_or_path,
-                transformer=transformer,
-                scheduler=scheduler,
-                revision=args.revision,
-                variant=args.variant,
-            )
-
-            if args.enable_slicing:
-                pipe.vae.enable_slicing()
-            if args.enable_tiling:
-                pipe.vae.enable_tiling()
-            if args.enable_model_cpu_offload:
-                pipe.enable_model_cpu_offload()
-
-            validation_prompts = args.validation_prompt.split(args.validation_prompt_separator)
-            for validation_prompt in validation_prompts:
-                pipeline_args = {
-                    "prompt": validation_prompt,
-                    "negative_prompt": "standing out, colour or texture contrast against the background, visible, clear, distinct, easy to see, easy to distinguish, easy to identify, easy to recognize, easy to spot, easy to notice, easy to find, easy to detect, big and center",
-                    "guidance_scale": 6.0,
-                    "num_inference_steps": 64,
-                    "height": args.height,
-                    "width": args.width,
-                    "max_sequence_length": 256,
-                }
-                log_validation(
-                    pipe=pipe,
-                    args=args,
-                    pipeline_args=pipeline_args,
-                    epoch=epoch,
-                    wandb_run=wandb_run,
-                )
-
-            print("===== Memory after validation =====")
-            print_memory("cuda")
-            reset_memory("cuda")
-
-            del pipe.text_encoder
-            del pipe.vae
-            del pipe
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            transformer.train()
+  
 
     transformer.eval()
     transformer_lora_layers = get_peft_model_state_dict(transformer)
