@@ -47,9 +47,9 @@ def truncate_videos(folder, output_folder, num_frames, resolution, force_upsampl
             video = VideoFileClip(str(file_path))
 
             # Skip if video is too short
-            if video.duration < duration:
-                click.echo(f"Skipping {file_path} as it is too short")
-                continue
+            # if video.duration < duration:
+            #     click.echo(f"Skipping {file_path} as it is too short")
+            #     continue
 
             # Skip if target resolution is larger than input
             if target_width > video.w or target_height > video.h:
