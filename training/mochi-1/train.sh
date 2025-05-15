@@ -17,7 +17,6 @@ cmd="CUDA_VISIBLE_DEVICES=$GPU_IDS python text_to_video_lora.py \
   --train_batch_size 1 \
   --dataloader_num_workers 4 \
   --pin_memory \
-  --caption_dropout 0.1 \
   --max_train_steps 2000 \
   --gradient_checkpointing \
   --enable_slicing \
