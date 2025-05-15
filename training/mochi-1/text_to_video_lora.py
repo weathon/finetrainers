@@ -485,6 +485,7 @@ def main(args):
             for validation_prompt in validation_prompts:
                 pipeline_args = {
                     "prompt": validation_prompt,
+                    "negative_prompt": "standing out, colour or texture contrast against the background, visible, clear, distinct, easy to see, easy to distinguish, easy to identify, easy to recognize, easy to spot, easy to notice, easy to find, easy to detect, big and center",
                     "guidance_scale": 6.0,
                     "num_inference_steps": 64,
                     "height": args.height,
